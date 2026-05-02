@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HotelReservation.Infrastruc
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HotelReservation.WebHost", "HotelReservation.WebHost\HotelReservation.WebHost.csproj", "{21DF9CF9-E8BF-42B1-90AA-EA1FE7F807FD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Domain.UnitTests", "..\tests\Domain.UnitTests\Domain.UnitTests.csproj", "{75386767-03D4-46B8-A0EF-F5DF52B6A7E4}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,5 +38,9 @@ Global
 		{21DF9CF9-E8BF-42B1-90AA-EA1FE7F807FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{21DF9CF9-E8BF-42B1-90AA-EA1FE7F807FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{21DF9CF9-E8BF-42B1-90AA-EA1FE7F807FD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{75386767-03D4-46B8-A0EF-F5DF52B6A7E4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{75386767-03D4-46B8-A0EF-F5DF52B6A7E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{75386767-03D4-46B8-A0EF-F5DF52B6A7E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{75386767-03D4-46B8-A0EF-F5DF52B6A7E4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
