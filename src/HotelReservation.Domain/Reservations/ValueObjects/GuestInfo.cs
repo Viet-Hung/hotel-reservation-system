@@ -28,7 +28,7 @@ public sealed class GuestInfo : ValueObject
     /// Pattern đơn giản, trong production nên dùng library chuyên dụng
     /// </summary>
     private static readonly Regex EmailRegex = new(
-        @"^[^@\s]+@[^@\s]+\.[^@\s]+$",
+        @"^(?!.*\.\.)[^@\s]+@[^@\s]+\.[^@\s]+$",
         RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
     /// <summary>
@@ -60,6 +60,22 @@ public sealed class GuestInfo : ValueObject
             throw new DomainException("Guest full name is required.");
         }
 
+        // Validate Email
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            throw new DomainException("Guest email is required.");
+        }
+
+        // Validate PhoneNumber
+        if (string.IsNullOrWhiteSpace(phoneNumber))
+        {
+            throw new DomainException("Guest phone number is required.");
+        }
+
+        var cleanedFullName = fullName.Trim();
+        var cleanedEmail = email.Trim().ToLowerInvariant();
+        var cleanedPhone = phoneNumber.Trim();
+
         if (fullName.Length < 2)
         {
             throw new DomainException("Guest full name must be at least 2 characters.");
@@ -70,24 +86,11 @@ public sealed class GuestInfo : ValueObject
             throw new DomainException("Guest full name cannot exceed 100 characters.");
         }
 
-        // Validate Email
-        if (string.IsNullOrWhiteSpace(email))
-        {
-            throw new DomainException("Guest email is required.");
-        }
-
-        if (!EmailRegex.IsMatch(email))
+        if (!EmailRegex.IsMatch(cleanedEmail))
         {
             throw new DomainException("Invalid email format.");
         }
 
-        // Validate PhoneNumber
-        if (string.IsNullOrWhiteSpace(phoneNumber))
-        {
-            throw new DomainException("Guest phone number is required.");
-        }
-
-        var cleanedPhone = phoneNumber.Trim();
         if (!PhoneRegex.IsMatch(cleanedPhone))
         {
             throw new DomainException("Invalid phone number format.");
@@ -99,8 +102,8 @@ public sealed class GuestInfo : ValueObject
         }
 
         return new GuestInfo(
-            fullName.Trim(),
-            email.Trim().ToLowerInvariant(), // Normalize email
+            cleanedFullName,
+            cleanedEmail, // Normalize email
             cleanedPhone);
     }
 
