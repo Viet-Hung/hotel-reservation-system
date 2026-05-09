@@ -52,19 +52,33 @@ public class DateRangeTests
     // VALIDATION TESTS
     // =========================
 
+    // [Fact]
+    // public void Create_WithCheckInInPast_ShouldThrowDomainException()
+    // {
+    //     // Arrange
+    //     var checkIn = DateTime.Today.AddDays(-1); // Ngày hôm qua
+    //     var checkOut = DateTime.Today.AddDays(1);
+
+    //     // Act
+    //     var act = () => DateRange.Create(checkIn, checkOut);
+
+    //     // Assert
+    //     act.Should().Throw<DomainException>()
+    //         .WithMessage("Check-in date cannot be in the past.");
+    // }
     [Fact]
-    public void Create_WithCheckInInPast_ShouldThrowDomainException()
+    public void Create_WithPastDates_ShouldCreateDateRange_WhenRangeIsValid()
     {
         // Arrange
-        var checkIn = DateTime.Today.AddDays(-1); // Ngày hôm qua
-        var checkOut = DateTime.Today.AddDays(1);
+        var checkIn = DateTime.Today.AddDays(-5);
+        var checkOut = DateTime.Today.AddDays(-2);
 
         // Act
-        var act = () => DateRange.Create(checkIn, checkOut);
+        var dateRange = DateRange.Create(checkIn, checkOut);
 
         // Assert
-        act.Should().Throw<DomainException>()
-            .WithMessage("Check-in date cannot be in the past.");
+        dateRange.CheckIn.Should().Be(checkIn.Date);
+        dateRange.CheckOut.Should().Be(checkOut.Date);
     }
 
     [Fact]

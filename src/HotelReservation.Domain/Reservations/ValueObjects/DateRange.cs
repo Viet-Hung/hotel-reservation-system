@@ -43,10 +43,11 @@ public sealed class DateRange : ValueObject
     public static DateRange Create(DateTime checkIn, DateTime checkOut)
     {
         // Business Rule 1: CheckIn phải là ngày trong tương lai hoặc hôm nay
-        if (checkIn.Date < DateTime.Today)
-        {
-            throw new DomainException("Check-in date cannot be in the past.");
-        }
+        // Test case: Chuyển rule sang Reservation.Create: để unit test trong quá khứ vẫn chạy được
+        // if (checkIn.Date < DateTime.Today)
+        // {
+        //     throw new DomainException("Check-in date cannot be in the past.");
+        // }
 
         // Business Rule 2: CheckOut phải sau CheckIn
         if (checkOut.Date <= checkIn.Date)

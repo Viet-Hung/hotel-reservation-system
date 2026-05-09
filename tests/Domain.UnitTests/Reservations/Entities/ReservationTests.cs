@@ -169,6 +169,58 @@ public class ReservationTests
             .WithMessage("Total price must be greater than zero.");
     }
 
+    [Fact]
+    public void Create_WithPastCheckIn_ShouldThrowDomainException()
+    {
+        // Arrange
+        var roomId = Guid.NewGuid();
+        var userId = Guid.NewGuid();
+        var dateRange = DateRange.Create(
+            DateTime.Today.AddDays(-2),
+            DateTime.Today.AddDays(1));
+
+        var guestInfo = GuestInfo.Create(
+            "John Doe",
+            "john@example.com",
+            "0123456789");
+
+        var totalPrice = Money.Create(100, "USD");
+
+        // Act
+        var act = () => Reservation.Create(roomId, userId, dateRange, guestInfo, totalPrice);
+
+        // Assert
+        act.Should()
+            .Throw<DomainException>()
+            .WithMessage("Check-in date cannot be in the past.");
+    }
+
+    private static Reservation CreateConfirmedPastReservation()
+    {
+        var reservation = new Reservation(
+            ReservationId.CreateUnique(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            DateRange.Create(DateTime.Today.AddDays(-3), DateTime.Today.AddDays(-1)),
+            GuestInfo.Create("John Doe", "john@example.com", "0123456789"),
+            Money.Create(100, "USD"));
+
+        reservation.Confirm();
+
+        return reservation;
+    }
+
+    private static Reservation CreatePendingPastReservation()
+    {
+        return new Reservation(
+            ReservationId.CreateUnique(),
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            DateRange.Create(DateTime.Today.AddDays(-3), DateTime.Today.AddDays(-1)),
+            GuestInfo.Create("John Doe", "john@example.com", "0123456789"),
+            Money.Create(100, "USD"));
+    }
+
     // =========================
     // CONFIRM TESTS
     // =========================
@@ -371,14 +423,16 @@ public class ReservationTests
             DateTime.Today.AddDays(-10),
             DateTime.Today.AddDays(-7));
 
-        var reservation = Reservation.Create(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            pastStay,
-            CreateValidGuestInfo(),
-            CreateValidTotalPrice());
+        /// Tạo reservation với checkout trong quá khú
+        // var reservation = Reservation.Create(
+        //     Guid.NewGuid(),
+        //     Guid.NewGuid(),
+        //     pastStay,
+        //     CreateValidGuestInfo(),
+        //     CreateValidTotalPrice());
+        var reservation = CreateConfirmedPastReservation();
 
-        reservation.Confirm();
+        // reservation.Confirm();
         reservation.Complete();
 
         // Act
@@ -445,14 +499,14 @@ public class ReservationTests
             DateTime.Today.AddDays(-10),
             DateTime.Today.AddDays(-7));
 
-        var reservation = Reservation.Create(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            pastStay,
-            CreateValidGuestInfo(),
-            CreateValidTotalPrice());
-
-        reservation.Confirm();
+        // Tạo reservation đã checkout nhưng chưa confirm
+        // var reservation = Reservation.Create(
+        //     Guid.NewGuid(),
+        //     Guid.NewGuid(),
+        //     pastStay,
+        //     CreateValidGuestInfo(),
+        //     CreateValidTotalPrice());
+        var reservation = CreateConfirmedPastReservation();
 
         // Act
         reservation.Complete();
@@ -469,19 +523,22 @@ public class ReservationTests
             DateTime.Today.AddDays(-10),
             DateTime.Today.AddDays(-7));
 
-        var reservation = Reservation.Create(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            pastStay,
-            CreateValidGuestInfo(),
-            CreateValidTotalPrice());
+        // Tạo reservation đã checkout nhưng chưa confirm
+        // var reservation = Reservation.Create(
+        //     Guid.NewGuid(),
+        //     Guid.NewGuid(),
+        //     pastStay,
+        //     CreateValidGuestInfo(),
+        //     CreateValidTotalPrice());
+        var reservation = CreatePendingPastReservation();
 
         // Act
         var act = () => reservation.Complete();
 
         // Assert
         act.Should().Throw<DomainException>()
-            .WithMessage("Only confirmed reservations can be completed.");
+            // .WithMessage("Only confirmed reservations can be completed.");
+            .WithMessage("Cannot complete reservation from pending status.");
     }
 
     [Fact]
@@ -507,6 +564,19 @@ public class ReservationTests
         // Assert
         act.Should().Throw<DomainException>()
             .WithMessage("Cannot complete reservation before check-out date.");
+    }
+
+    [Fact]
+    public void Complete_WhenReservationIsConfirmedAndCheckOutPassed_ShouldMarkAsCompleted()
+    {
+        // Arrange
+        var reservation = CreateConfirmedPastReservation();
+
+        // Act
+        reservation.Complete();
+
+        // Assert
+        reservation.Status.Should().Be(ReservationStatus.Completed);
     }
 
     // =========================
@@ -626,14 +696,16 @@ public class ReservationTests
             DateTime.Today.AddDays(-10),
             DateTime.Today.AddDays(-7));
 
-        var reservation = Reservation.Create(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            pastStay,
-            CreateValidGuestInfo(),
-            CreateValidTotalPrice());
+        /// Tạo reservation với checkout trong quá khú
+        // var reservation = Reservation.Create(
+        //     Guid.NewGuid(),
+        //     Guid.NewGuid(),
+        //     pastStay,
+        //     CreateValidGuestInfo(),
+        //     CreateValidTotalPrice());
+        var reservation = CreateConfirmedPastReservation();
 
-        reservation.Confirm();
+        // reservation.Confirm();
         reservation.Status.Should().Be(ReservationStatus.Confirmed);
 
         // Act

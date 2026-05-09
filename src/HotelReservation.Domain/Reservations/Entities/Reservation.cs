@@ -90,7 +90,7 @@ public sealed class Reservation : Entity, IAggregateRoot
     /// Private constructor cho EF Core
     /// EF Core cần constructor không tham số để reconstruct entity từ DB
     /// </summary>
-    private Reservation()
+    internal Reservation()
     {
         // EF Core sẽ set properties qua reflection
     }
@@ -99,7 +99,7 @@ public sealed class Reservation : Entity, IAggregateRoot
     /// Private constructor cho business logic
     /// Force dùng factory method Create()
     /// </summary>
-    private Reservation(
+    internal Reservation(
         ReservationId id,
         Guid roomId,
         Guid userId,
@@ -132,7 +132,7 @@ public sealed class Reservation : Entity, IAggregateRoot
     public static Reservation Create(
         Guid roomId,
         Guid userId,
-        DateRange stay,
+        DateRange dateRange,
         GuestInfo guest,
         Money totalPrice)
     {
@@ -146,12 +146,17 @@ public sealed class Reservation : Entity, IAggregateRoot
         if (totalPrice.Amount <= 0)
             throw new DomainException("Total price must be greater than zero.");
 
+        if (dateRange.CheckIn < DateTime.Today)
+        {
+            throw new DomainException("Check-in date cannot be in the past.");
+        }
+
         // Tạo reservation
         var reservation = new Reservation(
             ReservationId.CreateUnique(),
             roomId,
             userId,
-            stay,
+            dateRange,
             guest,
             totalPrice);
 
@@ -160,8 +165,8 @@ public sealed class Reservation : Entity, IAggregateRoot
             reservation.ReservationId,
             guest.Email,
             guest.FullName,
-            stay.CheckIn,
-            stay.CheckOut));
+            dateRange.CheckIn,
+            dateRange.CheckOut));
 
         return reservation;
     }
@@ -208,11 +213,11 @@ public sealed class Reservation : Entity, IAggregateRoot
     public void Cancel(string? reason = null)
     {
         // Guard clauses
-        if (Status == ReservationStatus.Cancelled)
-            throw new DomainException("Reservation is already cancelled.");
-
         if (Status == ReservationStatus.Completed)
             throw new DomainException("Cannot cancel a completed reservation.");
+
+        if (Status == ReservationStatus.Cancelled)
+            throw new DomainException("Reservation is already cancelled.");
 
         // Business rule: Không cho cancel nếu đã check-in (quá CheckIn date)
         if (DateTime.UtcNow.Date >= Stay.CheckIn.Date)
@@ -236,6 +241,12 @@ public sealed class Reservation : Entity, IAggregateRoot
     /// </summary>
     public void Complete()
     {
+        if (Status == ReservationStatus.Pending)
+            throw new DomainException("Cannot complete reservation from pending status.");
+
+        if (Status == ReservationStatus.Cancelled)
+            throw new DomainException("Cannot complete a cancelled reservation.");
+
         if (Status != ReservationStatus.Confirmed)
             throw new DomainException("Only confirmed reservations can be completed.");
 
