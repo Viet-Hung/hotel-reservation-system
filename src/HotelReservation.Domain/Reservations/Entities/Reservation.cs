@@ -79,8 +79,8 @@ public sealed class Reservation : Entity, IAggregateRoot
     /// Domain Events chưa được publish
     /// Sẽ được publish sau khi SaveChanges() thành công
     /// </summary>
-    private readonly List<DomainEvent> _domainEvents = new();
-    public IReadOnlyCollection<DomainEvent> DomainEvents => _domainEvents.AsReadOnly();
+    // private readonly List<DomainEvent> _domainEvents = new();
+    // public IReadOnlyCollection<DomainEvent> DomainEvents => _domainEvents.AsReadOnly();
 
     // =========================
     // CONSTRUCTORS
@@ -90,16 +90,16 @@ public sealed class Reservation : Entity, IAggregateRoot
     /// Private constructor cho EF Core
     /// EF Core cần constructor không tham số để reconstruct entity từ DB
     /// </summary>
-    private Reservation()
-    {
-        // EF Core sẽ set properties qua reflection
-        _domainEvents = new List<DomainEvent>(); // collection không nên null.
+    // private Reservation()
+    // {
+    //     // EF Core sẽ set properties qua reflection
+    //     _domainEvents = new List<DomainEvent>(); // collection không nên null.
 
-        ReservationId = null!; // nullable suppression operator, property này sẽ được EF hydrate sau
-        Stay = null!;
-        Guest = null!;
-        TotalPrice = null!;
-    }
+    //     ReservationId = null!; // nullable suppression operator, property này sẽ được EF hydrate sau
+    //     Stay = null!;
+    //     Guest = null!;
+    //     TotalPrice = null!;
+    // }
 
     /// <summary>
     /// Private constructor cho business logic
@@ -269,18 +269,19 @@ public sealed class Reservation : Entity, IAggregateRoot
     /// <summary>
     /// Thêm domain event vào queue
     /// </summary>
-    private void RaiseDomainEvent(DomainEvent domainEvent)
-    {
-        _domainEvents.Add(domainEvent);
-    }
+    // private void RaiseDomainEvent(DomainEvent domainEvent)
+    // {
+    //     // _domainEvents.Add(domainEvent);
+    //     RaiseDomainEvent(new ReservationCreatedEvent(domainEvent));
+    // }
 
     /// <summary>
     /// Clear tất cả domain events (sau khi đã publish)
     /// </summary>
-    public void ClearDomainEvents()
-    {
-        _domainEvents.Clear();
-    }
+    // public void ClearDomainEvents()
+    // {
+    //     _domainEvents.Clear();
+    // }
 }
 
 /// <summary>
