@@ -62,11 +62,11 @@ public class GuestInfoTests
     [InlineData(null)]
     [InlineData("")]
     [InlineData("   ")]
-    public void Create_WithEmptyFullName_ShouldThrowDomainException(string fullName)
+    public void Create_WithEmptyFullName_ShouldThrowDomainException(string? fullName)
     {
         // Act
         var act = () => GuestInfo.Create(
-            fullName,
+            fullName!,
             "john@example.com",
             "1234567890");
 
@@ -114,12 +114,12 @@ public class GuestInfoTests
     [InlineData(null)]
     [InlineData("")]
     [InlineData("   ")]
-    public void Create_WithEmptyEmail_ShouldThrowDomainException(string email)
+    public void Create_WithEmptyEmail_ShouldThrowDomainException(string? email)
     {
         // Act
         var act = () => GuestInfo.Create(
             "John Doe",
-            email,
+            email!,
             "1234567890");
 
         // Assert
@@ -170,13 +170,13 @@ public class GuestInfoTests
     [InlineData(null)]
     [InlineData("")]
     [InlineData("   ")]
-    public void Create_WithEmptyPhone_ShouldThrowDomainException(string phone)
+    public void Create_WithEmptyPhone_ShouldThrowDomainException(string? phone)
     {
         // Act
         var act = () => GuestInfo.Create(
             "John Doe",
             "john@example.com",
-            phone);
+            phone!);
 
         // Assert
         act.Should().Throw<DomainException>()

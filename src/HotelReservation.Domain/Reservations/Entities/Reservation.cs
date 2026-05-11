@@ -90,9 +90,15 @@ public sealed class Reservation : Entity, IAggregateRoot
     /// Private constructor cho EF Core
     /// EF Core cần constructor không tham số để reconstruct entity từ DB
     /// </summary>
-    internal Reservation()
+    private Reservation()
     {
         // EF Core sẽ set properties qua reflection
+        _domainEvents = new List<DomainEvent>(); // collection không nên null.
+
+        ReservationId = null!; // nullable suppression operator, property này sẽ được EF hydrate sau
+        Stay = null!;
+        Guest = null!;
+        TotalPrice = null!;
     }
 
     /// <summary>
