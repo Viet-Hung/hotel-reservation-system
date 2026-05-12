@@ -226,7 +226,10 @@ public sealed class Reservation : Entity, IAggregateRoot
             throw new DomainException("Reservation is already cancelled.");
 
         // Business rule: Không cho cancel nếu đã check-in (quá CheckIn date)
-        if (DateTime.UtcNow.Date >= Stay.CheckIn.Date)
+        // Dùng DateTime.Today để thống nhất với DateRange.Create()
+        // Vì rule này đang xử lý theo ngày check-in, không cần precision theo giờ UTC.
+        // if (DateTime.UtcNow.Date >= Stay.CheckIn.Date)
+        if (DateTime.Today >= Stay.CheckIn.Date)
             throw new DomainException("Cannot cancel reservation after check-in date.");
 
         // Update state
