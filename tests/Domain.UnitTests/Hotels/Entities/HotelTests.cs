@@ -1,6 +1,7 @@
 using FluentAssertions;
 using HotelReservation.Domain.Common;
 using HotelReservation.Domain.Hotels.Entities;
+using HotelReservation.Domain.Hotels.Events;
 using HotelReservation.Domain.Hotels.ValueObjects;
 using HotelReservation.Domain.Reservations.ValueObjects;
 using Xunit;
@@ -205,5 +206,42 @@ public class HotelTests
         var roomType = hotel.GetRoomType(RoomTypeId.CreateUnique());
 
         roomType.Should().BeNull();
+    }
+
+    [Fact]
+    public void UpdateRoomTypePrice_WithValidData_ShouldUpdatePrice()
+    {
+        var hotel = Hotel.Create("Grand Saigon Hotel", CreateValidAddress(), 5);
+        var roomTypeId = hotel.AddRoomType("Deluxe Double", CreateValidPrice(), CreateValidCapacity());
+        var newPrice = Money.Create(2_000_000, "VND");
+
+        hotel.UpdateRoomTypePrice(roomTypeId, newPrice);
+
+        var roomType = hotel.GetRoomType(roomTypeId);
+
+        roomType!.BasePrice.Should().Be(newPrice);
+    }
+
+    [Fact]
+    public void UpdateRoomTypePrice_ShouldRaiseRoomPriceChangedEvent()
+    {
+        var hotel = Hotel.Create("Grand Saigon Hotel", CreateValidAddress(), 5);
+        var roomTypeId = hotel.AddRoomType("Deluxe Double", CreateValidPrice(), CreateValidCapacity());
+        var newPrice = Money.Create(2_000_000, "VND");
+
+        hotel.UpdateRoomTypePrice(roomTypeId, newPrice);
+
+        hotel.DomainEvents.Should().ContainSingle(e => e is RoomPriceChangedEvent);
+    }
+
+    [Fact]
+    public void UpdateRoomTypePrice_WithNonExistentRoomType_ShouldThrowDomainException()
+    {
+        var hotel = Hotel.Create("Grand Saigon Hotel", CreateValidAddress(), 5);
+        var newPrice = Money.Create(2_000_000, "VND");
+
+        var act = () => hotel.UpdateRoomTypePrice(RoomTypeId.CreateUnique(), newPrice);
+
+        act.Should().Throw<DomainException>();
     }
 }

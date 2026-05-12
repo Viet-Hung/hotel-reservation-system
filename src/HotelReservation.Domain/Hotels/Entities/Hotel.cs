@@ -1,4 +1,5 @@
 using HotelReservation.Domain.Common;
+using HotelReservation.Domain.Hotels.Events;
 using HotelReservation.Domain.Hotels.ValueObjects;
 using HotelReservation.Domain.Reservations.ValueObjects;
 
@@ -105,5 +106,27 @@ public sealed class Hotel : Entity, IAggregateRoot
     public RoomType? GetRoomType(RoomTypeId roomTypeId)
     {
         return _roomTypes.FirstOrDefault(roomType => roomType.Id == roomTypeId);
+    }
+
+    /// <summary>
+    /// Cập nhật giá của một RoomType thuộc Hotel.
+    /// Hotel là aggregate root nên nó chịu trách nhiệm tìm RoomType
+    /// và raise domain event khi giá thay đổi.
+    /// </summary>
+    public void UpdateRoomTypePrice(RoomTypeId roomTypeId, Money newPrice)
+    {
+        var roomType = GetRoomType(roomTypeId);
+
+        if (roomType is null)
+            throw new DomainException("Room type not found.");
+
+        var oldPrice = roomType.BasePrice;
+
+        roomType.ChangePrice(newPrice);
+
+        RaiseDomainEvent(new RoomPriceChangedEvent(
+            roomType.Id,
+            oldPrice,
+            newPrice));
     }
 }
