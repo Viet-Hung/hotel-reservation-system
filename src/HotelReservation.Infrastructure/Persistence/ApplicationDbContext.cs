@@ -1,3 +1,4 @@
+using HotelReservation.Application.Common.Interfaces;
 using HotelReservation.Domain.Hotels.Entities;
 using HotelReservation.Domain.Reservations.Entities;
 using HotelReservation.Domain.Users.Entities;
@@ -5,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HotelReservation.Infrastructure.Persistence;
 
-public class ApplicationDbContext : DbContext
+public class ApplicationDbContext : DbContext, IApplicationDbContext
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
         : base(options)

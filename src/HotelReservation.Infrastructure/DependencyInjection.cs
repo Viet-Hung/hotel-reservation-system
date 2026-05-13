@@ -1,3 +1,4 @@
+using HotelReservation.Application.Common.Interfaces;
 using HotelReservation.Infrastructure.Persistence;
 using HotelReservation.Domain.Hotels.Interfaces;
 using HotelReservation.Domain.Reservations.Interfaces;
@@ -22,6 +23,8 @@ public static class DependencyInjection
         services.AddScoped<IReservationRepository, ReservationRepository>();
         services.AddScoped<IHotelRepository, HotelRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IApplicationDbContext>(provider =>
+            provider.GetRequiredService<ApplicationDbContext>());
 
         return services;
     }
