@@ -11,6 +11,14 @@ public sealed class RoomType
     public Money BasePrice { get; private set; }
     public RoomCapacity Capacity { get; private set; }
 
+    private RoomType()
+    {
+        Id = null!;
+        Name = null!;
+        BasePrice = null!;
+        Capacity = null!;
+    }
+
     internal RoomType(RoomTypeId id, string name, Money basePrice, RoomCapacity capacity)
     {
         if (string.IsNullOrWhiteSpace(name))

@@ -104,6 +104,15 @@ public sealed class Reservation : Entity, IAggregateRoot
     //     Guest = null!;
     //     TotalPrice = null!;
     // }
+    private Reservation()
+    {
+        ReservationId = null!;
+        RoomId = null!;
+        UserId = null!;
+        DateRange = null!;
+        GuestInfo = null!;
+        TotalPrice = null!;
+    }
 
     /// <summary>
     /// Private constructor cho business logic
