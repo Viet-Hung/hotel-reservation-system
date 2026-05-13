@@ -1,6 +1,8 @@
 using HotelReservation.Domain.Common;
-using HotelReservation.Domain.Reservations.ValueObjects;
+using HotelReservation.Domain.Hotels.Entities;
 using HotelReservation.Domain.Reservations.Events;
+using HotelReservation.Domain.Reservations.ValueObjects;
+using HotelReservation.Domain.Users.Entities;
 
 namespace HotelReservation.Domain.Reservations.Entities;
 
@@ -28,22 +30,24 @@ public sealed class Reservation : Entity, IAggregateRoot
     /// Lưu ý: Ở đây chỉ lưu Guid thôi, vì Room thuộc aggregate khác
     /// Trong DDD: Aggregate chỉ reference aggregate khác qua ID, không reference trực tiếp entity
     /// </summary>
-    public Guid RoomId { get; private set; }
+    // public Guid RoomId { get; private set; }
+    public RoomId RoomId { get; private set; }
 
     /// <summary>
     /// ID của user đặt phòng
     /// </summary>
-    public Guid UserId { get; private set; }
+    // public Guid UserId { get; private set; }
+    public UserId UserId { get; private set; }
 
     /// <summary>
     /// Khoảng thời gian lưu trú
     /// </summary>
-    public DateRange Stay { get; private set; }
+    public DateRange DateRange { get; private set; }
 
     /// <summary>
     /// Thông tin khách
     /// </summary>
-    public GuestInfo Guest { get; private set; }
+    public GuestInfo GuestInfo { get; private set; }
 
     /// <summary>
     /// Tổng tiền
@@ -107,17 +111,17 @@ public sealed class Reservation : Entity, IAggregateRoot
     /// </summary>
     internal Reservation(
         ReservationId id,
-        Guid roomId,
-        Guid userId,
-        DateRange stay,
-        GuestInfo guest,
+        RoomId roomId,
+        UserId userId,
+        DateRange dateRange,
+        GuestInfo guestInfo,
         Money totalPrice)
     {
         ReservationId = id;
         RoomId = roomId;
         UserId = userId;
-        Stay = stay;
-        Guest = guest;
+        DateRange = dateRange;
+        GuestInfo = guestInfo;
         TotalPrice = totalPrice;
         Status = ReservationStatus.Pending;
         CreatedAt = DateTime.UtcNow;
@@ -136,17 +140,17 @@ public sealed class Reservation : Entity, IAggregateRoot
     /// - Total price > 0
     /// </summary>
     public static Reservation Create(
-        Guid roomId,
-        Guid userId,
+        RoomId roomId,
+        UserId userId,
         DateRange dateRange,
         GuestInfo guest,
         Money totalPrice)
     {
         // Validation
-        if (roomId == Guid.Empty)
+        if (roomId.Value == Guid.Empty)
             throw new DomainException("Room ID is required.");
 
-        if (userId == Guid.Empty)
+        if (userId.Value == Guid.Empty)
             throw new DomainException("User ID is required.");
 
         if (totalPrice.Amount <= 0)
@@ -204,9 +208,9 @@ public sealed class Reservation : Entity, IAggregateRoot
         // Raise event
         RaiseDomainEvent(new ReservationConfirmedEvent(
             ReservationId,
-            Guest.Email,
-            Stay.CheckIn,
-            Stay.CheckOut));
+            GuestInfo.Email,
+            DateRange.CheckIn,
+            DateRange.CheckOut));
     }
 
     /// <summary>
@@ -229,7 +233,7 @@ public sealed class Reservation : Entity, IAggregateRoot
         // Dùng DateTime.Today để thống nhất với DateRange.Create()
         // Vì rule này đang xử lý theo ngày check-in, không cần precision theo giờ UTC.
         // if (DateTime.UtcNow.Date >= Stay.CheckIn.Date)
-        if (DateTime.Today >= Stay.CheckIn.Date)
+        if (DateTime.Today >= DateRange.CheckIn.Date)
             throw new DomainException("Cannot cancel reservation after check-in date.");
 
         // Update state
@@ -240,7 +244,7 @@ public sealed class Reservation : Entity, IAggregateRoot
         // Raise event
         RaiseDomainEvent(new ReservationCancelledEvent(
             ReservationId,
-            Guest.Email,
+            GuestInfo.Email,
             reason));
     }
 
@@ -259,7 +263,7 @@ public sealed class Reservation : Entity, IAggregateRoot
         if (Status != ReservationStatus.Confirmed)
             throw new DomainException("Only confirmed reservations can be completed.");
 
-        if (DateTime.UtcNow.Date < Stay.CheckOut.Date)
+        if (DateTime.UtcNow.Date < DateRange.CheckOut.Date)
             throw new DomainException("Cannot complete reservation before check-out date.");
 
         Status = ReservationStatus.Completed;

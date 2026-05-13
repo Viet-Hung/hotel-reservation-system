@@ -1,5 +1,7 @@
 using FluentAssertions;
 using HotelReservation.Domain.Common;
+using HotelReservation.Domain.Hotels.Entities;
+using HotelReservation.Domain.Users.Entities;
 using HotelReservation.Domain.Reservations.Entities;
 using HotelReservation.Domain.Reservations.Events;
 using HotelReservation.Domain.Reservations.ValueObjects;
@@ -55,8 +57,11 @@ public class ReservationTests
     public void Create_WithValidData_ShouldSucceed()
     {
         // Arrange
-        var roomId = Guid.NewGuid();
-        var userId = Guid.NewGuid();
+        // constructor giờ nhận RoomId, UserId, không còn nhận Guid
+        // var roomId = Guid.NewGuid();
+        // var userId = Guid.NewGuid();
+        var roomId = new RoomId(Guid.NewGuid());
+        var userId = new UserId(Guid.NewGuid());
         var stay = CreateValidDateRange();
         var guest = CreateValidGuestInfo();
         var totalPrice = CreateValidTotalPrice();
@@ -74,8 +79,8 @@ public class ReservationTests
         reservation.ReservationId.Should().NotBeNull();
         reservation.RoomId.Should().Be(roomId);
         reservation.UserId.Should().Be(userId);
-        reservation.Stay.Should().Be(stay);
-        reservation.Guest.Should().Be(guest);
+        reservation.DateRange.Should().Be(stay);
+        reservation.GuestInfo.Should().Be(guest);
         reservation.TotalPrice.Should().Be(totalPrice);
         reservation.Status.Should().Be(ReservationStatus.Pending);
         reservation.CreatedAt.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(1));
@@ -88,18 +93,20 @@ public class ReservationTests
     public void Create_ShouldRaiseReservationCreatedEvent()
     {
         // Arrange
-        var roomId = Guid.NewGuid();
-        var userId = Guid.NewGuid();
-        var stay = CreateValidDateRange();
-        var guest = CreateValidGuestInfo();
+        // var roomId = Guid.NewGuid();
+        // var userId = Guid.NewGuid();
+        var roomId = new RoomId(Guid.NewGuid());
+        var userId = new UserId(Guid.NewGuid());
+        var dateRange = CreateValidDateRange();
+        var guestInfo = CreateValidGuestInfo();
         var totalPrice = CreateValidTotalPrice();
 
         // Act
         var reservation = Reservation.Create(
             roomId,
             userId,
-            stay,
-            guest,
+            dateRange,
+            guestInfo,
             totalPrice);
 
         // Assert
@@ -109,24 +116,26 @@ public class ReservationTests
 
         var createdEvent = (ReservationCreatedEvent)domainEvent;
         createdEvent.ReservationId.Should().Be(reservation.ReservationId);
-        createdEvent.GuestEmail.Should().Be(guest.Email);
-        createdEvent.GuestName.Should().Be(guest.FullName);
-        createdEvent.CheckIn.Should().Be(stay.CheckIn);
-        createdEvent.CheckOut.Should().Be(stay.CheckOut);
+        createdEvent.GuestEmail.Should().Be(guestInfo.Email);
+        createdEvent.GuestName.Should().Be(guestInfo.FullName);
+        createdEvent.CheckIn.Should().Be(dateRange.CheckIn);
+        createdEvent.CheckOut.Should().Be(dateRange.CheckOut);
     }
 
     [Fact]
     public void Create_WithEmptyRoomId_ShouldThrowDomainException()
     {
         // Arrange
-        var roomId = Guid.Empty;
-        var userId = Guid.NewGuid();
-        var stay = CreateValidDateRange();
-        var guest = CreateValidGuestInfo();
+        // var roomId = Guid.Empty;
+        // var userId = Guid.NewGuid();
+        var roomId = new RoomId(Guid.Empty);
+        var userId = new UserId(Guid.NewGuid());
+        var dateRange = CreateValidDateRange();
+        var guestInfo = CreateValidGuestInfo();
         var totalPrice = CreateValidTotalPrice();
 
         // Act
-        var act = () => Reservation.Create(roomId, userId, stay, guest, totalPrice);
+        var act = () => Reservation.Create(roomId, userId, dateRange, guestInfo, totalPrice);
 
         // Assert
         act.Should().Throw<DomainException>()
@@ -137,14 +146,16 @@ public class ReservationTests
     public void Create_WithEmptyUserId_ShouldThrowDomainException()
     {
         // Arrange
-        var roomId = Guid.NewGuid();
-        var userId = Guid.Empty;
-        var stay = CreateValidDateRange();
-        var guest = CreateValidGuestInfo();
+        // var roomId = Guid.NewGuid();
+        // var userId = Guid.Empty;
+        var roomId = new RoomId(Guid.NewGuid());
+        var userId = new UserId(Guid.Empty);
+        var dateRange = CreateValidDateRange();
+        var guestInfo = CreateValidGuestInfo();
         var totalPrice = CreateValidTotalPrice();
 
         // Act
-        var act = () => Reservation.Create(roomId, userId, stay, guest, totalPrice);
+        var act = () => Reservation.Create(roomId, userId, dateRange, guestInfo, totalPrice);
 
         // Assert
         act.Should().Throw<DomainException>()
@@ -155,14 +166,16 @@ public class ReservationTests
     public void Create_WithZeroTotalPrice_ShouldThrowDomainException()
     {
         // Arrange
-        var roomId = Guid.NewGuid();
-        var userId = Guid.NewGuid();
-        var stay = CreateValidDateRange();
-        var guest = CreateValidGuestInfo();
+        // var roomId = Guid.NewGuid();
+        // var userId = Guid.NewGuid();
+        var roomId = new RoomId(Guid.NewGuid());
+        var userId = new UserId(Guid.NewGuid());
+        var dateRange = CreateValidDateRange();
+        var guestInfo = CreateValidGuestInfo();
         var totalPrice = Money.Zero("USD");
 
         // Act
-        var act = () => Reservation.Create(roomId, userId, stay, guest, totalPrice);
+        var act = () => Reservation.Create(roomId, userId, dateRange, guestInfo, totalPrice);
 
         // Assert
         act.Should().Throw<DomainException>()
@@ -173,8 +186,10 @@ public class ReservationTests
     public void Create_WithPastCheckIn_ShouldThrowDomainException()
     {
         // Arrange
-        var roomId = Guid.NewGuid();
-        var userId = Guid.NewGuid();
+        // var roomId = Guid.NewGuid();
+        // var userId = Guid.NewGuid();
+        var roomId = new RoomId(Guid.NewGuid());
+        var userId = new UserId(Guid.NewGuid());
         var dateRange = DateRange.Create(
             DateTime.Today.AddDays(-2),
             DateTime.Today.AddDays(1));
@@ -199,8 +214,10 @@ public class ReservationTests
     {
         var reservation = new Reservation(
             ReservationId.CreateUnique(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
+            // Guid.NewGuid(),
+            // Guid.NewGuid(),
+            new RoomId(Guid.NewGuid()),
+            new UserId(Guid.NewGuid()),
             DateRange.Create(DateTime.Today.AddDays(-3), DateTime.Today.AddDays(-1)),
             GuestInfo.Create("John Doe", "john@example.com", "0123456789"),
             Money.Create(100, "USD"));
@@ -214,8 +231,10 @@ public class ReservationTests
     {
         return new Reservation(
             ReservationId.CreateUnique(),
-            Guid.NewGuid(),
-            Guid.NewGuid(),
+            // Guid.NewGuid(),
+            // Guid.NewGuid(),
+            new RoomId(Guid.NewGuid()),
+            new UserId(Guid.NewGuid()),
             DateRange.Create(DateTime.Today.AddDays(-3), DateTime.Today.AddDays(-1)),
             GuestInfo.Create("John Doe", "john@example.com", "0123456789"),
             Money.Create(100, "USD"));
@@ -230,8 +249,10 @@ public class ReservationTests
     {
         // Arrange
         var reservation = Reservation.Create(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
+            // Guid.NewGuid(),
+            // Guid.NewGuid(),
+            new RoomId(Guid.NewGuid()),
+            new UserId(Guid.NewGuid()),
             CreateValidDateRange(),
             CreateValidGuestInfo(),
             CreateValidTotalPrice());
@@ -252,8 +273,10 @@ public class ReservationTests
     {
         // Arrange
         var reservation = Reservation.Create(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
+            // Guid.NewGuid(),
+            // Guid.NewGuid(),
+            new RoomId(Guid.NewGuid()),
+            new UserId(Guid.NewGuid()),
             CreateValidDateRange(),
             CreateValidGuestInfo(),
             CreateValidTotalPrice());
@@ -270,9 +293,9 @@ public class ReservationTests
 
         var confirmedEvent = (ReservationConfirmedEvent)domainEvent;
         confirmedEvent.ReservationId.Should().Be(reservation.ReservationId);
-        confirmedEvent.GuestEmail.Should().Be(reservation.Guest.Email);
-        confirmedEvent.CheckIn.Should().Be(reservation.Stay.CheckIn);
-        confirmedEvent.CheckOut.Should().Be(reservation.Stay.CheckOut);
+        confirmedEvent.GuestEmail.Should().Be(reservation.GuestInfo.Email);
+        confirmedEvent.CheckIn.Should().Be(reservation.DateRange.CheckIn);
+        confirmedEvent.CheckOut.Should().Be(reservation.DateRange.CheckOut);
     }
 
     [Fact]
@@ -280,8 +303,10 @@ public class ReservationTests
     {
         // Arrange
         var reservation = Reservation.Create(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
+            // Guid.NewGuid(),
+            // Guid.NewGuid(),
+            new RoomId(Guid.NewGuid()),
+            new UserId(Guid.NewGuid()),
             CreateValidDateRange(),
             CreateValidGuestInfo(),
             CreateValidTotalPrice());
@@ -301,8 +326,10 @@ public class ReservationTests
     {
         // Arrange
         var reservation = Reservation.Create(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
+            // Guid.NewGuid(),
+            // Guid.NewGuid(),
+            new RoomId(Guid.NewGuid()),
+            new UserId(Guid.NewGuid()),
             CreateValidDateRange(),
             CreateValidGuestInfo(),
             CreateValidTotalPrice());
@@ -326,8 +353,10 @@ public class ReservationTests
     {
         // Arrange
         var reservation = Reservation.Create(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
+            // Guid.NewGuid(),
+            // Guid.NewGuid(),
+            new RoomId(Guid.NewGuid()),
+            new UserId(Guid.NewGuid()),
             CreateValidDateRange(),
             CreateValidGuestInfo(),
             CreateValidTotalPrice());
@@ -349,8 +378,10 @@ public class ReservationTests
     {
         // Arrange
         var reservation = Reservation.Create(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
+            // Guid.NewGuid(),
+            // Guid.NewGuid(),
+            new RoomId(Guid.NewGuid()),
+            new UserId(Guid.NewGuid()),
             CreateValidDateRange(),
             CreateValidGuestInfo(),
             CreateValidTotalPrice());
@@ -371,8 +402,10 @@ public class ReservationTests
     {
         // Arrange
         var reservation = Reservation.Create(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
+            // Guid.NewGuid(),
+            // Guid.NewGuid(),
+            new RoomId(Guid.NewGuid()),
+            new UserId(Guid.NewGuid()),
             CreateValidDateRange(),
             CreateValidGuestInfo(),
             CreateValidTotalPrice());
@@ -389,7 +422,7 @@ public class ReservationTests
 
         var cancelledEvent = (ReservationCancelledEvent)domainEvent;
         cancelledEvent.ReservationId.Should().Be(reservation.ReservationId);
-        cancelledEvent.GuestEmail.Should().Be(reservation.Guest.Email);
+        cancelledEvent.GuestEmail.Should().Be(reservation.GuestInfo.Email);
         cancelledEvent.CancellationReason.Should().Be("Test cancellation");
     }
 
@@ -398,8 +431,10 @@ public class ReservationTests
     {
         // Arrange
         var reservation = Reservation.Create(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
+            // Guid.NewGuid(),
+            // Guid.NewGuid(),
+            new RoomId(Guid.NewGuid()),
+            new UserId(Guid.NewGuid()),
             CreateValidDateRange(),
             CreateValidGuestInfo(),
             CreateValidTotalPrice());
@@ -453,8 +488,10 @@ public class ReservationTests
             DateTime.Today.AddDays(3));
 
         var reservation = Reservation.Create(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
+            // Guid.NewGuid(),
+            // Guid.NewGuid(),
+            new RoomId(Guid.NewGuid()),
+            new UserId(Guid.NewGuid()),
             stay,
             CreateValidGuestInfo(),
             CreateValidTotalPrice());
@@ -472,8 +509,10 @@ public class ReservationTests
     {
         // Arrange
         var reservation = Reservation.Create(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
+            // Guid.NewGuid(),
+            // Guid.NewGuid(),
+            new RoomId(Guid.NewGuid()),
+            new UserId(Guid.NewGuid()),
             CreateValidDateRange(),
             CreateValidGuestInfo(),
             CreateValidTotalPrice());
@@ -550,8 +589,10 @@ public class ReservationTests
             DateTime.Today.AddDays(5));
 
         var reservation = Reservation.Create(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
+            // Guid.NewGuid(),
+            // Guid.NewGuid(),
+            new RoomId(Guid.NewGuid()),
+            new UserId(Guid.NewGuid()),
             futureStay,
             CreateValidGuestInfo(),
             CreateValidTotalPrice());
@@ -588,8 +629,10 @@ public class ReservationTests
     {
         // Arrange
         var reservation = Reservation.Create(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
+            // Guid.NewGuid(),
+            // Guid.NewGuid(),
+            new RoomId(Guid.NewGuid()),
+            new UserId(Guid.NewGuid()),
             CreateValidDateRange(),
             CreateValidGuestInfo(),
             CreateValidTotalPrice());
@@ -608,8 +651,10 @@ public class ReservationTests
     {
         // Arrange
         var reservation = Reservation.Create(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
+            // Guid.NewGuid(),
+            // Guid.NewGuid(),
+            new RoomId(Guid.NewGuid()),
+            new UserId(Guid.NewGuid()),
             CreateValidDateRange(),
             CreateValidGuestInfo(),
             CreateValidTotalPrice());
@@ -632,8 +677,10 @@ public class ReservationTests
     {
         // Arrange
         var reservation = Reservation.Create(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
+            // Guid.NewGuid(),
+            // Guid.NewGuid(),
+            new RoomId(Guid.NewGuid()),
+            new UserId(Guid.NewGuid()),
             CreateValidDateRange(),
             CreateValidGuestInfo(),
             CreateValidTotalPrice());
@@ -652,8 +699,10 @@ public class ReservationTests
     {
         // Arrange
         var reservation = Reservation.Create(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
+            // Guid.NewGuid(),
+            // Guid.NewGuid(),
+            new RoomId(Guid.NewGuid()),
+            new UserId(Guid.NewGuid()),
             CreateValidDateRange(),
             CreateValidGuestInfo(),
             CreateValidTotalPrice());
@@ -672,8 +721,10 @@ public class ReservationTests
     {
         // Arrange
         var reservation = Reservation.Create(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
+            // Guid.NewGuid(),
+            // Guid.NewGuid(),
+            new RoomId(Guid.NewGuid()),
+            new UserId(Guid.NewGuid()),
             CreateValidDateRange(),
             CreateValidGuestInfo(),
             CreateValidTotalPrice());
@@ -723,8 +774,10 @@ public class ReservationTests
     public void Create_WithSameRoomAndUser_ShouldSucceed()
     {
         // Arrange
-        var roomId = Guid.NewGuid();
-        var userId = Guid.NewGuid();
+        // var roomId = Guid.NewGuid();
+        // var userId = Guid.NewGuid();
+        var roomId = new RoomId(Guid.NewGuid());
+        var userId = new UserId(Guid.NewGuid());
 
         // Act - Tạo 2 reservations cùng room và user (khác thời gian)
         var reservation1 = Reservation.Create(
